@@ -5,16 +5,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MAISON LUMIÈRE</title>
-  <meta property="og:title" content="MAISON LUMIÈRE"/>
+  <meta property="og:title" content="MAISON LUMIÈRE" />
   <meta property="og:description" content="현대적으로 재해석된 유럽식 프라이빗 빌라. 빛과 그림자가 머무는 고요한 스테이." />
   <meta property="og:image" content="https://raw.githubusercontent.com/blancyun88-jpg/maison-lumiere/main/opimg.jpg" />
-  <meta property="og:url" content="https://maisonlumiere.vercel.app/"/>
-  <meta property="og:type" content="website"/>
-  <meta name="twitter:card" content="summary_large_image"/>
-  <meta name="twitter:title" content="MAISON LUMIÈRE"/>
+  <meta property="og:url" content="https://maisonlumiere.vercel.app/" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="MAISON LUMIÈRE" />
   <meta name="twitter:description" content="현대적으로 재해석된 유럽식 프라이빗 빌라. 빛과 그림자가 머무는 고요한 스테이.">
   <meta name="twitter:image" content="https://raw.githubusercontent.com/blancyun88-jpg/maison-lumiere/main/opimg.jpg">
-  
+
+
   <!-- Preload critical assets -->
   <link rel="preload" href="img/intro.webp" as="image">
   <link rel="preload" href="style.css" as="style">
@@ -336,6 +337,80 @@
   <!-- ========================================
        FOOTER
   ========================================= -->
+  <!-- ========================================
+       RESERVE MODAL
+  ========================================= -->
+  <div id="reserve-modal" class="modal" aria-modal="true" role="dialog" aria-label="예약 문의" aria-hidden="true">
+    <div class="modal__backdrop"></div>
+    <div class="modal__panel">
+
+      <button class="modal__close" aria-label="닫기">
+        <span></span><span></span>
+      </button>
+
+      <!-- Form State -->
+      <div class="modal__form-wrap">
+        <p class="modal__eyebrow">Reserve Your Stay</p>
+        <h2 class="modal__title">MAISON LUMIÈRE</h2>
+
+        <form class="reserve-form" novalidate>
+          <div class="form-row form-row--dates">
+            <div class="form-field">
+              <label for="f-checkin">Check-in</label>
+              <input type="date" id="f-checkin" name="checkin" required>
+            </div>
+            <div class="form-row__sep">→</div>
+            <div class="form-field">
+              <label for="f-checkout">Check-out</label>
+              <input type="date" id="f-checkout" name="checkout" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label for="f-guests">인원수</label>
+              <div class="guest-stepper">
+                <button type="button" class="stepper__btn stepper__btn--minus" aria-label="인원 감소">−</button>
+                <span class="stepper__value" id="f-guests" aria-live="polite">2</span>
+                <button type="button" class="stepper__btn stepper__btn--plus" aria-label="인원 증가">+</button>
+                <span class="stepper__max">/ 4</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row form-row--half">
+            <div class="form-field">
+              <label for="f-name">이름</label>
+              <input type="text" id="f-name" name="name" placeholder="홍 길동" required>
+            </div>
+            <div class="form-field">
+              <label for="f-contact">연락처</label>
+              <input type="text" id="f-contact" name="contact" placeholder="010-0000-0000" required>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="f-message">요청사항 <span class="label-optional">(선택)</span></label>
+            <textarea id="f-message" name="message" rows="3" placeholder="특별한 요청이나 문의사항을 남겨주세요."></textarea>
+          </div>
+
+          <p class="form-notice">최소 2박부터 예약 가능합니다. 확정은 담당자가 개별 연락드립니다.</p>
+
+          <button type="submit" class="form-submit">문의 보내기</button>
+        </form>
+      </div>
+
+      <!-- Success State -->
+      <div class="modal__success" aria-hidden="true">
+        <div class="success__icon">✦</div>
+        <p class="success__title">문의가 접수되었습니다</p>
+        <p class="success__body">빠른 시일 내에 연락드리겠습니다.<br>MAISON LUMIÈRE에서의 시간을 기다려 주세요.</p>
+        <button class="success__close">닫기</button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Custom Cursor -->
   <div class="cursor-follow" aria-hidden="true">
     <span class="cursor-label">Stay</span>
@@ -1271,6 +1346,160 @@
       if ('ontouchstart' in window) {
         cursor.style.display = 'none';
       }
+
+
+      /* ═══════════════════════════════════════
+         RESERVE MODAL
+      ═══════════════════════════════════════ */
+      const modal = document.getElementById('reserve-modal');
+      const backdrop = modal.querySelector('.modal__backdrop');
+      const panel = modal.querySelector('.modal__panel');
+      const closeBtn = modal.querySelector('.modal__close');
+      const formWrap = modal.querySelector('.modal__form-wrap');
+      const successWrap = modal.querySelector('.modal__success');
+      const reserveForm = modal.querySelector('.reserve-form');
+      const successClose = modal.querySelector('.success__close');
+
+      // 오늘 날짜를 min으로 설정
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('f-checkin').min = today;
+      document.getElementById('f-checkout').min = today;
+
+      // 체크인 변경 시 체크아웃 min 자동 조정
+      document.getElementById('f-checkin').addEventListener('change', (e) => {
+        const checkin = e.target.value;
+        const nextDay = new Date(checkin);
+        nextDay.setDate(nextDay.getDate() + 2); // 최소 2박
+        document.getElementById('f-checkout').min = nextDay.toISOString().split('T')[0];
+        document.getElementById('f-checkout').value = '';
+      });
+
+      /* ─── 인원 스테퍼 ─── */
+      let guestCount = 2;
+      const guestDisplay = document.getElementById('f-guests');
+      const minusBtn = modal.querySelector('.stepper__btn--minus');
+      const plusBtn = modal.querySelector('.stepper__btn--plus');
+
+      function updateStepper() {
+        guestDisplay.textContent = guestCount;
+        minusBtn.disabled = guestCount <= 1;
+        plusBtn.disabled = guestCount >= 4;
+      }
+      updateStepper();
+
+      minusBtn.addEventListener('click', () => { if (guestCount > 1) { guestCount--; updateStepper(); } });
+      plusBtn.addEventListener('click', () => { if (guestCount < 4) { guestCount++; updateStepper(); } });
+
+      /* ─── 모달 열기 / 닫기 GSAP 애니메이션 ─── */
+      const modalOpenTl = gsap.timeline({ paused: true });
+      const modalCloseTl = gsap.timeline({ paused: true });
+
+      modalOpenTl
+        .set(modal, { autoAlpha: 1 })
+        .to(backdrop, { opacity: 1, duration: 0.45, ease: 'power2.out' })
+        .to(panel, { opacity: 1, y: 0, duration: 0.55, ease: 'power4.out' }, '-=0.2');
+
+      modalCloseTl
+        .to(panel, { opacity: 0, y: 20, duration: 0.35, ease: 'power3.in' })
+        .to(backdrop, { opacity: 0, duration: 0.3, ease: 'power2.in' }, '-=0.15')
+        .set(modal, { autoAlpha: 0 });
+
+      function openModal() {
+        modal.setAttribute('aria-hidden', 'false');
+        modal.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+        lenis.stop();
+        modalCloseTl.pause(0);
+        modalOpenTl.restart();
+      }
+
+      function closeModal() {
+        modal.setAttribute('aria-hidden', 'true');
+        modal.classList.remove('is-open');
+        document.body.style.overflow = '';
+        lenis.start();
+        modalOpenTl.pause();
+        modalCloseTl.restart();
+      }
+
+      function resetModal() {
+        reserveForm.reset();
+        guestCount = 2;
+        updateStepper();
+        formWrap.style.display = '';
+        successWrap.classList.remove('is-visible');
+        successWrap.setAttribute('aria-hidden', 'true');
+        // 에러 스타일 초기화
+        modal.querySelectorAll('.is-error').forEach(el => el.classList.remove('is-error'));
+      }
+
+      /* ─── Reserve 버튼들 이벤트 연결 ─── */
+      document.querySelectorAll('a[href="#reserve"], .nav__reserve').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          resetModal();
+          openModal();
+        });
+      });
+
+      // 닫기 버튼
+      closeBtn.addEventListener('click', closeModal);
+
+      // 배경 클릭으로 닫기
+      backdrop.addEventListener('click', closeModal);
+
+      // ESC 키
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+      });
+
+      // 성공 화면 닫기 버튼
+      successClose.addEventListener('click', () => {
+        closeModal();
+        setTimeout(resetModal, 600);
+      });
+
+      /* ─── 폼 유효성 검사 & 제출 ─── */
+      reserveForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        let valid = true;
+
+        const requiredFields = reserveForm.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+          if (!field.value.trim()) {
+            field.classList.add('is-error');
+            valid = false;
+          } else {
+            field.classList.remove('is-error');
+          }
+        });
+
+        // 체크인 < 체크아웃 확인
+        const checkinVal = document.getElementById('f-checkin').value;
+        const checkoutVal = document.getElementById('f-checkout').value;
+        if (checkinVal && checkoutVal && checkinVal >= checkoutVal) {
+          document.getElementById('f-checkout').classList.add('is-error');
+          valid = false;
+        }
+
+        if (!valid) return;
+
+        // 성공 전환 — 폼 fade out → 성공 메시지 fade in
+        gsap.to(formWrap, {
+          opacity: 0, y: -12, duration: 0.35, ease: 'power3.in',
+          onComplete: () => {
+            formWrap.style.display = 'none';
+            successWrap.classList.add('is-visible');
+            successWrap.setAttribute('aria-hidden', 'false');
+            gsap.from(successWrap, { opacity: 0, y: 16, duration: 0.55, ease: 'power3.out' });
+          }
+        });
+      });
+
+      // 에러 필드 입력 시 에러 스타일 제거
+      reserveForm.querySelectorAll('input, textarea').forEach(field => {
+        field.addEventListener('input', () => field.classList.remove('is-error'));
+      });
 
     }); // end DOMContentLoaded
   </script>
