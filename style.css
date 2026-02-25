@@ -823,11 +823,18 @@ ul {
   margin-bottom: var(--space-md);
 }
 
+
 .spa__hero-text .text-reveal {
   font-weight: 300;
   line-height: 1.7;
   font-size: var(--fs-body);
   opacity: 0.9;
+}
+
+.spa__hero-text .title-serif {
+
+  letter-spacing: 0.05rem;
+  font-size: clamp(2.6rem, 4.5vw, 3.5rem);
 }
 
 /* Dual images grid */
@@ -1157,6 +1164,7 @@ ul {
 
   .spa__dual-text {
     white-space: normal;
+    width:100%;
     padding: 0 var(--space-md);
   }
 
